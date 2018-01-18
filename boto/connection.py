@@ -52,6 +52,7 @@ import sys
 import time
 import xml.sax
 import copy
+import urllib
 
 from boto import auth
 from boto import auth_handler
@@ -669,7 +670,7 @@ class AWSAuthConnection(object):
         if 'http_proxy' in os.environ and not self.proxy:
             pattern = re.compile(
                 '(?:http://)?'
-                '(?:(?P<user>[\w\-\.]+):(?P<pass>.*)@)?'
+                '(?:(?P<user>[\w\-\.\%]+):(?P<pass>.*)@)?'
                 '(?P<host>[\w\-\.]+)'
                 '(?::(?P<port>\d+))?'
             )
@@ -677,8 +678,15 @@ class AWSAuthConnection(object):
             if match:
                 self.proxy = match.group('host')
                 self.proxy_port = match.group('port')
-                self.proxy_user = match.group('user')
+                                
+                self.proxy_user = match.group('user')                
+                if self.proxy_user:
+                    self.proxy_user = urllib.unquote(self.proxy_user)
+
                 self.proxy_pass = match.group('pass')
+                if self.proxy_pass:
+                    self.proxy_pass = urllib.unquote(self.proxy_pass)
+
         else:
             if not self.proxy:
                 self.proxy = config.get_value('Boto', 'proxy', None)
